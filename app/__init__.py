@@ -14,6 +14,7 @@ login_manager.login_message = "Please log in to continue."
 
 
 def create_app():
+
     app = Flask(__name__)
     app.config.from_object(Config)
 
@@ -53,6 +54,7 @@ def create_app():
         shared_documents = []
 
         for permission in shared_permissions:
+
             document = db.session.get(
                 Document,
                 permission.document_id
@@ -76,7 +78,7 @@ def create_app():
     def admin_dashboard():
 
         from flask import render_template
-        from app.models import Document, User
+        from app.models import Document, User, AuditLog
 
         if current_user.role != "admin":
             abort(403)
@@ -87,10 +89,15 @@ def create_app():
 
         all_users = User.query.all()
 
+        audit_logs = AuditLog.query.order_by(
+            AuditLog.timestamp.desc()
+        ).limit(100).all()
+
         return render_template(
             "admin_dashboard.html",
             documents=all_documents,
-            users=all_users
+            users=all_users,
+            audit_logs=audit_logs
         )
 
     # ---------- CREATE DATABASE AND ADMIN ----------
@@ -106,11 +113,13 @@ def create_app():
         print("ADMIN SETUP STARTED")
 
         if admin_email:
+
             admin_user = User.query.filter_by(
-                email=admin_email.strip()
+                email=admin_email.strip().lower()
             ).first()
 
             if admin_user:
+
                 admin_user.role = "admin"
                 db.session.commit()
 
