@@ -1,0 +1,103 @@
+
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard | TrustVault{% endblock %}
+
+{% block content %}
+
+<section class="dashboard-container">
+
+    <h1>TrustVault Admin Dashboard</h1>
+    <p>Manage registered users and monitor all uploaded documents.</p>
+
+    <hr>
+
+    <!-- REGISTERED USERS -->
+    <div class="dashboard-card">
+
+        <h2>Registered Users</h2>
+
+        <p>Total Users: {{ users|length }}</p>
+
+        {% if users %}
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.role }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% else %}
+            <p>No registered users found.</p>
+        {% endif %}
+
+    </div>
+
+    <hr>
+
+    <!-- ALL UPLOADED DOCUMENTS -->
+    <div class="dashboard-card">
+
+        <h2>All Uploaded Documents</h2>
+
+        <p>Total Documents: {{ documents|length }}</p>
+
+        {% if documents %}
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Document ID</th>
+                    <th>Document Name</th>
+                    <th>Original Filename</th>
+                    <th>Owner</th>
+                    <th>Upload Date</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for document in documents %}
+                <tr>
+                    <td>{{ document.id }}</td>
+                    <td>{{ document.title }}</td>
+                    <td>{{ document.original_filename }}</td>
+                    <td>{{ document.owner.username }}</td>
+                    <td>{{ document.uploaded_at.strftime('%d-%m-%Y') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% else %}
+            <p>No documents uploaded yet.</p>
+        {% endif %}
+
+    </div>
+
+    <br>
+
+    <a href="{{ url_for('dashboard') }}">User Dashboard</a>
+
+    <br><br>
+
+    <a href="{{ url_for('auth.logout') }}">Logout</a>
+
+</section>
+
+{% endblock %}

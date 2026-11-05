@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}TrustVault | Secure Document Sharing{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="hero-content">
+        <p class="hero-label">SECURE DOCUMENT MANAGEMENT</p>
+
+        <h1>Your Documents.<br>Your Control.</h1>
+
+        <p class="hero-description">
+            Store, manage, and share documents securely.
+            Control who can access your files and maintain
+            a record of document activity.
+        </p>
+
+        <div class="hero-actions">
+            <a href="{{ url_for('auth.register') }}" class="hero-button">
+                Get Started
+            </a>
+
+            <a href="{{ url_for('auth.login') }}" class="hero-link">
+                Sign In
+            </a>
+        </div>
+    </div>
+
+    <div class="hero-visual">
+        <div class="security-icon">◆</div>
+        <h2>Security You Can Trust</h2>
+        <p>Access control · Encryption · Audit history</p>
+    </div>
+</section>
+{% endblock %}

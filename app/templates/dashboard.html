@@ -1,0 +1,163 @@
+
+{% extends "base.html" %}
+
+{% block title %}Dashboard | TrustVault{% endblock %}
+
+{% block content %}
+<section class="dashboard-container">
+
+    <h1>Your Dashboard</h1>
+    <p>Manage and securely share your documents.</p>
+
+    <!-- FLASH MESSAGES -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <p>{{ message }}</p>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- UPLOAD DOCUMENT -->
+    <div class="dashboard-card">
+        <h2>Upload a Document</h2>
+        <p>Select a PDF, TXT, or DOCX file to upload.</p>
+
+        <form method="POST"
+              action="{{ url_for('documents.upload_document') }}"
+              enctype="multipart/form-data">
+
+            <input type="file"
+                   name="document"
+                   accept=".pdf,.txt,.docx"
+                   required>
+
+            <button type="submit">Upload Document</button>
+        </form>
+    </div>
+
+    <!-- YOUR DOCUMENTS -->
+    <div class="dashboard-card">
+        <h2>Your Documents</h2>
+
+        {% if documents %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Document Name</th>
+                        <th>Uploaded Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for document in documents %}
+                    <tr>
+                        <td>{{ document.title }}</td>
+
+                        <td>
+                            {{ document.uploaded_at.strftime('%d-%m-%Y') }}
+                        </td>
+
+                        <td>
+                            <a href="{{ url_for('documents.download_document', document_id=document.id) }}">
+                                Download
+                            </a>
+                        </td>
+                    </tr>
+
+                    <!-- SHARE DOCUMENT FORM -->
+                    <tr>
+                        <td colspan="3">
+                            <form method="POST"
+                                  action="{{ url_for('documents.share_document', document_id=document.id) }}">
+
+                                <label>Share with email:</label>
+
+                                <input type="email"
+                                       name="email"
+                                       placeholder="Enter registered user's email"
+                                       required>
+
+                                <label>Permission:</label>
+
+                                <select name="permission" required>
+                                    <option value="viewer">Viewer</option>
+                                    <option value="editor">Editor</option>
+                                </select>
+
+                                <button type="submit">
+                                    Share Document
+                                </button>
+
+                            </form>
+
+                            <!-- REVOKE ACCESS FORM -->
+                            <form method="POST"
+                                  action="{{ url_for('documents.revoke_document_access', document_id=document.id) }}">
+
+                                <label>Remove access from email:</label>
+
+                                <input type="email"
+                                       name="email"
+                                       placeholder="Enter registered user's email"
+                                       required>
+
+                                <button type="submit">
+                                    Remove Access
+                                </button>
+
+                            </form>
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+                </tbody>
+            </table>
+
+        {% else %}
+            <p>No documents uploaded yet.</p>
+        {% endif %}
+    </div>
+
+    <!-- SHARED DOCUMENTS -->
+    <div class="dashboard-card">
+        <h2>Documents Shared With Me</h2>
+
+        {% if shared_documents %}
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Document Name</th>
+                        <th>Permission</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for item in shared_documents %}
+                    <tr>
+                        <td>{{ item.document.title }}</td>
+
+                        <td>{{ item.permission }}</td>
+
+                        <td>
+                            <a href="{{ url_for('documents.download_document', document_id=item.document.id) }}">
+                                Download
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+        {% else %}
+            <p>No documents have been shared with you.</p>
+        {% endif %}
+    </div>
+
+    <a href="{{ url_for('auth.logout') }}">Logout</a>
+
+</section>
+{% endblock %}

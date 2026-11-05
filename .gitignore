@@ -1,0 +1,32 @@
+
+# Environment variables and secret keys
+.env
+.env.*
+
+# Python virtual environment
+venv/
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Private uploaded documents
+private_storage/
+private_storage_backup/
+
+# Instance files
+instance/
+
+# Backup files
+*backup*
+*.bak
+
+# IDE files
+.vscode/

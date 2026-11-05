@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Login | TrustVault{% endblock %}
+
+{% block content %}
+<section class="auth-container">
+    <div class="auth-card">
+        <h1>Welcome Back</h1>
+        <p>Log in to access your secure documents.</p>
+
+        <form method="POST">
+            <label>Email Address</label>
+            <input type="email" name="email"
+                   placeholder="Enter your email" required>
+
+            <label>Password</label>
+            <input type="password" name="password"
+                   placeholder="Enter your password" required>
+
+            <button type="submit">Login</button>
+        </form>
+
+        <p>Don't have an account?
+            <a href="{{ url_for('auth.register') }}">Create an account</a>
+        </p>
+    </div>
+</section>
+{% endblock %}
