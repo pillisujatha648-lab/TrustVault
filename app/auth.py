@@ -1,4 +1,6 @@
 
+import os
+
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required, current_user
 from sqlalchemy import or_
@@ -44,7 +46,10 @@ def register():
             flash("Username or email already exists.", "error")
             return redirect(url_for("auth.register"))
 
-        user = User(username=username, email=email)
+        admin_email = os.environ.get("ADMIN_EMAIL", "").strip().lower()
+        role = "admin" if email == admin_email and admin_email else "user"
+
+        user = User(username=username, email=email, role=role)
         user.set_password(password)
 
         db.session.add(user)
@@ -72,6 +77,16 @@ def login():
         )
 
         if user and user.check_password(password):
+
+            admin_email = os.environ.get(
+                "ADMIN_EMAIL", ""
+            ).strip().lower()
+
+            if admin_email and user.email.strip().lower() == admin_email:
+                if user.role != "admin":
+                    user.role = "admin"
+                    db.session.commit()
+
             login_user(user)
             return redirect(url_for("dashboard"))
 
@@ -88,4 +103,3 @@ def logout():
     flash("You have logged out successfully.", "success")
 
     return redirect(url_for("auth.login"))
-
