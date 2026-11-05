@@ -1,8 +1,25 @@
 
 import os
+import secrets
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash
-from flask_login import login_user, logout_user, login_required, current_user
+from flask import (
+    Blueprint,
+    render_template,
+    render_template_string,
+    request,
+    redirect,
+    url_for,
+    flash,
+    abort
+)
+
+from flask_login import (
+    login_user,
+    logout_user,
+    login_required,
+    current_user
+)
+
 from sqlalchemy import or_
 
 from app import db, login_manager
@@ -16,6 +33,7 @@ def load_user(user_id):
     return db.session.get(User, int(user_id))
 
 
+# ---------- REGISTER ----------
 @auth.route("/register", methods=["GET", "POST"])
 def register():
 
@@ -46,21 +64,31 @@ def register():
             flash("Username or email already exists.", "error")
             return redirect(url_for("auth.register"))
 
-        admin_email = os.environ.get("ADMIN_EMAIL", "").strip().lower()
+        admin_email = os.environ.get(
+            "ADMIN_EMAIL", ""
+        ).strip().lower()
+
         role = "admin" if email == admin_email and admin_email else "user"
 
-        user = User(username=username, email=email, role=role)
+        user = User(
+            username=username,
+            email=email,
+            role=role
+        )
+
         user.set_password(password)
 
         db.session.add(user)
         db.session.commit()
 
         flash("Registration successful. Please log in.", "success")
+
         return redirect(url_for("auth.login"))
 
     return render_template("register.html")
 
 
+# ---------- LOGIN ----------
 @auth.route("/login", methods=["GET", "POST"])
 def login():
 
@@ -88,6 +116,7 @@ def login():
                     db.session.commit()
 
             login_user(user)
+
             return redirect(url_for("dashboard"))
 
         flash("Invalid email or password.", "error")
@@ -95,11 +124,79 @@ def login():
     return render_template("login.html")
 
 
+# ---------- LOGOUT ----------
 @auth.route("/logout")
 @login_required
 def logout():
 
     logout_user()
+
     flash("You have logged out successfully.", "success")
 
     return redirect(url_for("auth.login"))
+
+
+# ---------- ADMIN PASSWORD RESET ----------
+@auth.route("/admin-password-reset", methods=["GET", "POST"])
+def admin_password_reset():
+
+    reset_token = os.environ.get("ADMIN_RESET_TOKEN", "")
+    admin_email = os.environ.get(
+        "ADMIN_EMAIL", ""
+    ).strip().lower()
+
+    if not reset_token or not admin_email:
+        abort(404)
+
+    if request.method == "POST":
+
+        entered_token = request.form.get("token", "")
+        new_password = request.form.get("new_password", "")
+
+        if not secrets.compare_digest(entered_token, reset_token):
+            abort(403)
+
+        if len(new_password) < 8:
+            return (
+                "Password must contain at least 8 characters.",
+                400
+            )
+
+        user = db.session.scalar(
+            db.select(User).where(User.email == admin_email)
+        )
+
+        if not user:
+            return "Admin account not found.", 404
+
+        user.set_password(new_password)
+        user.role = "admin"
+
+        db.session.commit()
+
+        return """
+        <h2>Password reset successful!</h2>
+        <p>Your admin password has been changed.</p>
+        <a href="/login">Go to Login</a>
+        """
+
+    return render_template_string("""
+        <h2>TrustVault Admin Password Reset</h2>
+
+        <form method="POST">
+
+            <label>Reset Token:</label><br>
+            <input type="password" name="token" required>
+            <br><br>
+
+            <label>New Password:</label><br>
+            <input type="password"
+                   name="new_password"
+                   minlength="8"
+                   required>
+            <br><br>
+
+            <button type="submit">Reset Password</button>
+
+        </form>
+    """)
