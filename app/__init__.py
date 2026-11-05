@@ -18,10 +18,7 @@ def create_app():
     app.config.from_object(Config)
 
     os.makedirs(app.config["PRIVATE_STORAGE"], exist_ok=True)
-    os.makedirs(
-        app.instance_path,
-        exist_ok=True
-    )
+    os.makedirs(app.instance_path, exist_ok=True)
 
     db.init_app(app)
     login_manager.init_app(app)
@@ -45,12 +42,10 @@ def create_app():
         from flask import render_template
         from app.models import Document, DocumentPermission
 
-        # Documents owned by the current user
         owned_documents = Document.query.filter_by(
             owner_id=current_user.id
         ).all()
 
-        # Documents shared with the current user
         shared_permissions = DocumentPermission.query.filter_by(
             user_id=current_user.id
         ).all()
@@ -83,16 +78,13 @@ def create_app():
         from flask import render_template
         from app.models import Document, User
 
-        # Only admins can access this page
         if current_user.role != "admin":
             abort(403)
 
-        # Get all uploaded documents
         all_documents = Document.query.order_by(
             Document.uploaded_at.desc()
         ).all()
 
-        # Get all registered users
         all_users = User.query.all()
 
         return render_template(
@@ -101,8 +93,9 @@ def create_app():
             users=all_users
         )
 
-    # ---------- CREATE DATABASE TABLES ----------
+    # ---------- CREATE DATABASE AND ADMIN ----------
     with app.app_context():
+
         from app import models
         from app.models import User
 
@@ -110,13 +103,24 @@ def create_app():
 
         admin_email = os.environ.get("ADMIN_EMAIL")
 
+        print("ADMIN SETUP STARTED")
+
         if admin_email:
             admin_user = User.query.filter_by(
-                email=admin_email
+                email=admin_email.strip()
             ).first()
 
             if admin_user:
                 admin_user.role = "admin"
                 db.session.commit()
+
+                print("ADMIN ROLE UPDATED:", admin_user.username)
+                print("CURRENT ROLE:", admin_user.role)
+
+            else:
+                print("ADMIN USER NOT FOUND")
+
+        else:
+            print("ADMIN_EMAIL VARIABLE MISSING")
 
     return app
