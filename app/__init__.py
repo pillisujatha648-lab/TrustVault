@@ -104,6 +104,19 @@ def create_app():
     # ---------- CREATE DATABASE TABLES ----------
     with app.app_context():
         from app import models
+        from app.models import User
+
         db.create_all()
+
+        admin_email = os.environ.get("ADMIN_EMAIL")
+
+        if admin_email:
+            admin_user = User.query.filter_by(
+                email=admin_email
+            ).first()
+
+            if admin_user:
+                admin_user.role = "admin"
+                db.session.commit()
 
     return app
