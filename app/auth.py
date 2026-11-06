@@ -33,12 +33,20 @@ def load_user(user_id):
     return db.session.get(User, int(user_id))
 
 
+# ---------- ROLE-BASED REDIRECTION ----------
+def redirect_user():
+    if current_user.role == "admin":
+        return redirect(url_for("admin_dashboard"))
+
+    return redirect(url_for("dashboard"))
+
+
 # ---------- REGISTER ----------
 @auth.route("/register", methods=["GET", "POST"])
 def register():
 
     if current_user.is_authenticated:
-        return redirect(url_for("dashboard"))
+        return redirect_user()
 
     if request.method == "POST":
 
@@ -93,7 +101,7 @@ def register():
 def login():
 
     if current_user.is_authenticated:
-        return redirect(url_for("dashboard"))
+        return redirect_user()
 
     if request.method == "POST":
 
@@ -117,7 +125,7 @@ def login():
 
             login_user(user)
 
-            return redirect(url_for("dashboard"))
+            return redirect_user()
 
         flash("Invalid email or password.", "error")
 

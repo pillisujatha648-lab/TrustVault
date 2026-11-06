@@ -1,7 +1,7 @@
 
 import os
 
-from flask import Flask, abort
+from flask import Flask, abort, redirect, url_for, render_template
 from flask_sqlalchemy import SQLAlchemy
 from config import Config
 from flask_login import LoginManager, login_required, current_user
@@ -30,9 +30,17 @@ def create_app():
     app.register_blueprint(auth)
     app.register_blueprint(documents)
 
+    # ---------- HOME PAGE ----------
     @app.route("/")
     def home():
-        from flask import render_template
+
+        if current_user.is_authenticated:
+
+            if current_user.role == "admin":
+                return redirect(url_for("admin_dashboard"))
+
+            return redirect(url_for("dashboard"))
+
         return render_template("index.html")
 
     # ---------- USER DASHBOARD ----------
@@ -40,7 +48,10 @@ def create_app():
     @login_required
     def dashboard():
 
-        from flask import render_template
+        # Admin should always see the admin dashboard
+        if current_user.role == "admin":
+            return redirect(url_for("admin_dashboard"))
+
         from app.models import Document, DocumentPermission
 
         owned_documents = Document.query.filter_by(
@@ -77,11 +88,10 @@ def create_app():
     @login_required
     def admin_dashboard():
 
-        from flask import render_template
-        from app.models import Document, User, AuditLog
-
         if current_user.role != "admin":
             abort(403)
+
+        from app.models import Document, User, AuditLog
 
         all_documents = Document.query.order_by(
             Document.uploaded_at.desc()
@@ -108,14 +118,14 @@ def create_app():
 
         db.create_all()
 
-        admin_email = os.environ.get("ADMIN_EMAIL")
+        admin_email = os.environ.get("ADMIN_EMAIL", "").strip().lower()
 
         print("ADMIN SETUP STARTED")
 
         if admin_email:
 
             admin_user = User.query.filter_by(
-                email=admin_email.strip().lower()
+                email=admin_email
             ).first()
 
             if admin_user:
