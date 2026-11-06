@@ -1,26 +1,113 @@
-```html
-{% extends "base.html" %}
 
-{% block title %}Admin Dashboard | TrustVault{% endblock %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrustVault Admin Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: #f4f6f9;
+            color: #222;
+        }
 
-{% block content %}
+        header {
+            background: #172554;
+            color: white;
+            padding: 18px 6%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-<section class="dashboard-container">
+        header a {
+            color: white;
+            text-decoration: none;
+            margin-left: 18px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        .section {
+            background: white;
+            padding: 22px;
+            margin-bottom: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            overflow-x: auto;
+        }
+
+        h1, h2 {
+            color: #172554;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #e8eefc;
+        }
+
+        .role {
+            font-weight: bold;
+            text-transform: capitalize;
+        }
+
+        .logout {
+            background: #dc2626;
+            padding: 9px 14px;
+            border-radius: 5px;
+        }
+
+        .empty {
+            color: #666;
+            padding: 12px 0;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <div>
+        <strong>◆ TrustVault</strong>
+    </div>
+
+    <nav>
+        <a href="{{ url_for('home') }}">Home</a>
+        <a href="{{ url_for('auth.logout') }}" class="logout">Logout</a>
+    </nav>
+</header>
+
+<div class="container">
 
     <h1>TrustVault Admin Dashboard</h1>
     <p>Manage registered users and monitor all uploaded documents.</p>
 
-    <hr>
-
     <!-- REGISTERED USERS -->
-    <div class="dashboard-card">
+    <div class="section">
 
         <h2>Registered Users</h2>
 
         <p>Total Users: {{ users|length }}</p>
 
         {% if users %}
-
         <table>
             <thead>
                 <tr>
@@ -37,37 +124,31 @@
                     <td>{{ user.id }}</td>
                     <td>{{ user.username }}</td>
                     <td>{{ user.email }}</td>
-                    <td>{{ user.role }}</td>
+                    <td class="role">{{ user.role }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-
         {% else %}
-            <p>No registered users found.</p>
+            <p class="empty">No registered users found.</p>
         {% endif %}
 
     </div>
 
-    <hr>
-
     <!-- ALL UPLOADED DOCUMENTS -->
-    <div class="dashboard-card">
+    <div class="section">
 
         <h2>All Uploaded Documents</h2>
 
-        <p>Total Documents: {{ documents|length }}</p>
-
         {% if documents %}
-
         <table>
             <thead>
                 <tr>
-                    <th>Document ID</th>
-                    <th>Document Name</th>
+                    <th>ID</th>
+                    <th>Document Title</th>
                     <th>Original Filename</th>
-                    <th>Owner</th>
-                    <th>Upload Date</th>
+                    <th>Owner ID</th>
+                    <th>Uploaded At</th>
                 </tr>
             </thead>
 
@@ -77,30 +158,24 @@
                     <td>{{ document.id }}</td>
                     <td>{{ document.title }}</td>
                     <td>{{ document.original_filename }}</td>
-                    <td>{{ document.owner.username }}</td>
-                    <td>{{ document.uploaded_at.strftime('%d-%m-%Y') }}</td>
+                    <td>{{ document.owner_id }}</td>
+                    <td>{{ document.uploaded_at }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-
         {% else %}
-            <p>No documents uploaded yet.</p>
+            <p class="empty">No documents uploaded yet.</p>
         {% endif %}
 
     </div>
 
-    <hr>
-
     <!-- AUDIT LOGS -->
-    <div class="dashboard-card">
+    <div class="section">
 
         <h2>Audit Logs</h2>
 
-        <p>Total Records: {{ audit_logs|length }}</p>
-
         {% if audit_logs %}
-
         <table>
             <thead>
                 <tr>
@@ -109,8 +184,8 @@
                     <th>Document ID</th>
                     <th>Action</th>
                     <th>Result</th>
-                    <th>Date and Time</th>
                     <th>IP Address</th>
+                    <th>Timestamp</th>
                 </tr>
             </thead>
 
@@ -118,54 +193,23 @@
                 {% for log in audit_logs %}
                 <tr>
                     <td>{{ log.id }}</td>
-
-                    <td>
-                        {% if log.user_id %}
-                            {% if log.user %}
-                                {{ log.user.username }}
-                            {% else %}
-                                User ID: {{ log.user_id }}
-                            {% endif %}
-                        {% else %}
-                            Unknown
-                        {% endif %}
-                    </td>
-
-                    <td>{{ log.document_id or '-' }}</td>
-
+                    <td>{{ log.user.username if log.user else 'Unknown' }}</td>
+                    <td>{{ log.document_id }}</td>
                     <td>{{ log.action }}</td>
-
                     <td>{{ log.result }}</td>
-
-                    <td>
-                        {% if log.timestamp %}
-                            {{ log.timestamp.strftime('%d-%m-%Y %H:%M:%S') }}
-                        {% else %}
-                            -
-                        {% endif %}
-                    </td>
-
-                    <td>{{ log.ip_address or '-' }}</td>
+                    <td>{{ log.ip_address }}</td>
+                    <td>{{ log.timestamp }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-
         {% else %}
-            <p>No audit records found.</p>
+            <p class="empty">No audit logs available.</p>
         {% endif %}
 
     </div>
 
-    <br>
+</div>
 
-    <a href="{{ url_for('dashboard') }}">User Dashboard</a>
-
-    <br><br>
-
-    <a href="{{ url_for('auth.logout') }}">Logout</a>
-
-</section>
-
-{% endblock %}
-```
+</body>
+</html>
